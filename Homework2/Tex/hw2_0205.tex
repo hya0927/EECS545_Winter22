@@ -1,0 +1,441 @@
+\documentclass{article}
+
+\usepackage{fancyhdr}
+\usepackage{extramarks}
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{amssymb}
+\usepackage{amsfonts}
+\usepackage{tikz}
+\usepackage[plain]{algorithm}
+\usepackage{algpseudocode}
+\usepackage{float} 
+
+\usetikzlibrary{automata,positioning}
+
+%
+% Basic Document Settings
+%
+
+\topmargin=-0.45in
+\evensidemargin=0in
+\oddsidemargin=0in
+\textwidth=6.5in
+\textheight=9.0in
+\headsep=0.25in
+
+\linespread{1.1}
+
+\pagestyle{fancy}
+\lhead{\hmwkAuthorName}
+\chead{\hmwkClass\ \hmwkTitle}
+%\chead{\hmwkClass\ (\hmwkClassInstructor\ \hmwkClassTime): \hmwkTitle}
+\rhead{\firstxmark}
+\lfoot{\lastxmark}
+\cfoot{\thepage}
+
+\renewcommand\headrulewidth{0.4pt}
+\renewcommand\footrulewidth{0.4pt}
+
+\setlength\parindent{0pt}
+
+%
+% Create Problem Sections
+%
+
+\newcommand{\enterProblemHeader}[1]{
+    \nobreak\extramarks{}{Problem \arabic{#1} continued on next page\ldots}\nobreak{}
+    \nobreak\extramarks{Problem \arabic{#1} (continued)}{Problem \arabic{#1} continued on next page\ldots}\nobreak{}
+}
+
+\newcommand{\exitProblemHeader}[1]{
+    \nobreak\extramarks{Problem \arabic{#1} (continued)}{Problem \arabic{#1} continued on next page\ldots}\nobreak{}
+    \stepcounter{#1}
+    \nobreak\extramarks{Problem \arabic{#1}}{}\nobreak{}
+}
+
+\setcounter{secnumdepth}{0}
+\newcounter{partCounter}
+\newcounter{homeworkProblemCounter}
+\setcounter{homeworkProblemCounter}{1}
+\nobreak\extramarks{Problem \arabic{homeworkProblemCounter}}{}\nobreak{}
+
+%
+% Homework Problem Environment
+%
+% This environment takes an optional argument. When given, it will adjust the
+% problem counter. This is useful for when the problems given for your
+% assignment aren't sequential. See the last 3 problems of this template for an
+% example.
+%
+\newenvironment{homeworkProblem}[1][-1]{
+    \ifnum#1>0
+        \setcounter{homeworkProblemCounter}{#1}
+    \fi
+    \section{Problem \arabic{homeworkProblemCounter}}
+    \setcounter{partCounter}{1}
+    \enterProblemHeader{homeworkProblemCounter}
+}{
+    \exitProblemHeader{homeworkProblemCounter}
+}
+
+%
+% Homework Details
+%   - Title
+%   - Due date
+%   - Class
+%   - Section/Time
+%   - Instructor
+%   - Author
+%
+
+\newcommand{\hmwkTitle}{Homework\ \#2}
+\newcommand{\hmwkDueDate}{February 8, 2022}
+\newcommand{\hmwkClass}{EECS 545 Machine Learning}
+\newcommand{\hmwkClassTime}{Section A}
+\newcommand{\hmwkClassInstructor}{Professor Honglak Lee}
+\newcommand{\hmwkAuthorName}{\textbf{Yuang Huang}}
+\newcommand{\hmwkUninameName}{\textbf{yahuang@umich.edu}}
+
+%
+% Title Page
+%
+
+\title{
+    \vspace{2in}
+    \textmd{\textbf{\hmwkClass:\ \hmwkTitle}}\\
+    \normalsize\vspace{0.1in}\small{Due\ on\ \hmwkDueDate\ at 12pm}\\
+    \vspace{0.1in}\large{\textit{\hmwkClassInstructor\ \hmwkClassTime}}
+    \vspace{3in}
+}
+
+\author{\hmwkAuthorName\\
+\hmwkUninameName}
+\date{}
+
+\renewcommand{\part}[1]{\textbf{\large Part \Alph{partCounter}}\stepcounter{partCounter}\\}
+
+%
+% Various Helper Commands
+%
+
+% Useful for algorithms
+\newcommand{\alg}[1]{\textsc{\bfseries \footnotesize #1}}
+
+% For derivatives
+\newcommand{\deriv}[1]{\frac{\mathrm{d}}{\mathrm{d}x} (#1)}
+
+% For partial derivatives
+\newcommand{\pderiv}[2]{\frac{\partial}{\partial #1} (#2)}
+
+% Integral dx
+\newcommand{\dx}{\mathrm{d}x}
+
+% Alias for the Solution section header
+\newcommand{\solution}{\textbf{\large Solution}}
+
+% Probability commands: Expectation, Variance, Covariance, Bias
+\newcommand{\E}{\mathrm{E}}
+\newcommand{\Var}{\mathrm{Var}}
+\newcommand{\Cov}{\mathrm{Cov}}
+\newcommand{\Bias}{\mathrm{Bias}}
+
+\begin{document}
+
+\maketitle
+
+\pagebreak
+
+\begin{homeworkProblem}
+    \large Logistic regression
+    \\
+
+    \textbf{Solution}
+    
+    %\begin{enumerate}
+    %    \item \(f(n) = n^2 + n + 1\), \(g(n) = 2n^3\)
+    %    \item \(f(n) = n\sqrt{n} + n^2\), \(g(n) = n^2\)
+    %    \item \(f(n) = n^2 - n + 1\), \(g(n) = n^2 / 2\)
+    %\end{enumerate}
+    %We solve each solution algebraically to determine a possible constant
+    %\(c\).
+    %\\
+
+    \textbf{Part a:} Hessian $\mathbf{H}$ 
+
+    \begin{equation}
+    l(\mathbf{w}) = \sum_{i=1}^{N}y^{(i)}\log h(\mathbf{x}^{(i)}) + (1 - y^{(i)})\log (1 - h(\mathbf{x^{(i)}})),
+    \label{eq1}
+    \end{equation}
+    where $h(\mathbf{x}) = \sigma(\mathbf{w^Tx}) = \frac{1}{1+\exp(-\mathbf{w^Tx})}$ and we denote that $pred = \mathbf{w^Tx}$.
+
+    Then we assume that: 
+    \begin{equation}
+    l_i(\mathbf{w}) = y^{(i)}\log \sigma(pred^{(i)}) + (1 - y^{(i)})\log (1 - \sigma(pred^{(i)})),
+    \label{eq2}
+    \end{equation}
+    where we know that $\frac{\partial pred}{\partial \mathbf{w}} = \mathbf{x^T}$ and $\frac{\partial pred}{\partial \mathbf{w^T}} = \mathbf{x}$.\\
+    It can be shown that:
+    \begin{equation}
+    \begin{aligned}
+    \nabla l_i(\mathbf{w})&= \frac{y^{(i)}x^{(i)}}{\sigma({pred^{(i)}})} - \frac{(1 - y^{(i)})x^{(i)}}{(1 - \sigma(pred^{(i)}))}\\
+    &= y^{(i)}x^{(i)}(1 - \sigma({pred^{(i)}})) - (1 - y^{(i)})x^{(i)}\sigma(pred^{(i)})\\
+    &= x^{(i)}y^{(i)} -x^{(i)}\sigma{(pred^{(i)})}
+    \label{eq3}
+    \end{aligned}
+    \end{equation}
+    Then we can be write:
+    \begin{equation}
+    \begin{aligned}
+    H^{(i)} = \nabla^2 l_i(\mathbf{w})&= -x^{(i)}x^{(i)^T}\frac{1}{1 + \exp(pred^{(i)})}\frac{\exp(pred^{(i)})}{1 + \exp(pred^{(i)})}\\
+    &= -x^{(i)}x^{(i)^T}\sigma(pred^{(i)})(1 - \sigma(pred^{(i)}))
+    \label{eq3}
+    \end{aligned}
+    \end{equation}
+    so the Hessian $H$ is written by:
+    \begin{equation}
+    \begin{aligned}
+    H = -\mathbf{XRX^T}
+    \label{eq3}
+    \end{aligned}
+    \end{equation}
+    where $R$ is the diagnal matrix that the diagnal elements are $\sigma(pred^{(i)})(1 - \sigma(pred^{(i)}))$.
+    Thus,
+    \begin{equation}
+    \begin{aligned}
+    \mathbf{z^T}H\mathbf{z} &= -\mathbf{zXRX^Tz^T}\\
+    &= -||\mathbf{z^TRX}||^2 \leq 0.
+    \label{eq3}
+    \end{aligned}
+    \end{equation}
+    So it is shown that Hessian $H$ is negative semi-definite and thus $l$ is concave and has no local maxima other than the global one.
+    \pagebreak
+
+    \textbf{Part b:} 
+
+    illustrates training data(blue), the prediction points using the BGD(green) and the SGD(orange), respectively. It is known from the figure that the fit of both methods is good and close. Fig. illustrates the mean squared error ($E_{MS}$) curves of the BGD and the SGD. The convergence speed of the two methods is very close (so I draw the curves separately), and they both converge at around $epoch = 50$, and converge to $E_{MS} = 0.2$. In theory, the SGD will converge faster. In problem1, it may be hard to distinguish the convergence speed of the two methods because the training set is too small.\\ \\
+
+
+    \textbf{Part c:}
+
+    llustrates the trend of $E_{RMS}$ changing with degree. It is easy to know from the figure that 0, 1, 2, 3 degree polynomials under-fitting the date and 9 degree polynomial over-fitting the data. I think 5 degree best fits the date because  the Root-Mean-Square Error ($E_{RMS}$) of 5 degree polynomial function is relatively smaller and it needs relatively less calculations.\\ 
+
+    \textbf{Part c(\romannumeral1):}\\
+    $\qquad$The closed form solution of the ridge regression is:
+    \begin{equation}
+    W_{ML} = (\mathbf{\Phi^T\Phi} + \lambda\mathbf{I})^{-1}\mathbf{\Phi^Ty}
+    \label{eq1}
+    \end{equation}
+
+    \begin{figure}[H]  
+    \centering  
+    \includegraphics[width=4in,height=3.2in]{overfitting.png} 
+    \caption{The trend of $E_{RMS}$ changing with regulization factor $\lambda$ using closed form solution} 
+    \label{Fig4}
+    \end{figure}
+
+    \textbf{Part c(\romannumeral2):}\\
+    As shown in Fig. \ref{Fig4}, the closed form solution reaches the lowest test $E_{RMS}$ at $\lambda = 10^{-4}$, so $\lambda = 10^{-4}$ seemed to work the best.\\
+
+\end{homeworkProblem}
+
+\pagebreak
+
+\begin{homeworkProblem}
+    \large Softmax Regression via Gradient Ascent\\
+
+    \textbf{Solution}
+
+    \textbf{Part a:}\\
+     \begin{equation}
+     \begin{aligned}
+    \nabla_{\mathbf{w_m}} l(\mathbf{w}) = \sum_{i=1}^{N}\phi (\mathbf{x}^{(i)}){\left [\mathbf{I}(y^{(i)} = m) - \frac{\exp(\mathbf{w}^{T}_{m}\phi(\mathbf{x}^{(i)}))}{1 + \sum_{j = 1}^{K -1} \exp(\mathbf{w}^T_{j}\phi(\mathbf{(x)}^{(i)}))}\right] },
+    \label{eq8}
+    \end{aligned}
+    \end{equation}
+    and we know :
+    \begin{equation}
+    \begin{aligned}
+    p(y = k|\mathbf{x}, \mathbf{w}) &= \frac{\exp(\mathbf{w}^{T}_{m}\phi(\mathbf{x}^{(i)}))}{1 + \sum_{j = 1}^{K -1} \exp(\mathbf{w}^T_{j}\phi(\mathbf{(x)}^{(i)}))},\\
+    l(\mathbf{w}) &= \sum_{i = 1}^{N}\sum_{k = 1}^{K}\log (\left [p(y^{(i)} = k|\mathbf{x}^{(i)}, \mathbf{w})\right]^{\mathbf{I}(y^{(i) = k})}).
+    \label{eq9}
+    \end{aligned}
+    \end{equation}
+    with (\ref{eq8}) and (\ref{eq9}), we can get:
+    \begin{align}
+    \notag
+    \nabla_{\mathbf{w_m}} l(\mathbf{w}) &= \nabla_{\mathbf{w}} \sum_{i=1}^{N}\sum_{k=1}^{K}  \mathbf{I}(y^{(i)} = k){\left [ \mathbf{w}^{T}_{m}\phi(\mathbf{x}^{(i)})- \log (1 + \sum_{j = 1}^{K -1} \exp(\mathbf{w}^T_{j}\phi(\mathbf{(x)}^{(i)}))\right]) }\\ \notag
+    &= \sum_{i=1}^{N} \nabla_{\mathbf{w}} \sum_{k=1}^{K}  \mathbf{I}(y^{(i)} = k){\left [ \mathbf{w}^{T}_{m}\phi(\mathbf{x}^{(i)})- \log (1 + \sum_{j = 1}^{K -1} \exp(\mathbf{w}^T_{j}\phi(\mathbf{(x)}^{(i)}))\right]) }\\ \notag
+    &= \sum_{i=1}^{N} \Big(\nabla_{\mathbf{w}} \sum_{k\neq m}^{K}  \mathbf{I}(y^{(i)} = k){\left [ \mathbf{w}^{T}_{m}\phi(\mathbf{x}^{(i)})- \log (1 + \sum_{j = 1}^{K -1} \exp(\mathbf{w}^T_{j}\phi(\mathbf{(x)}^{(i)}))\right]) }\\ \notag
+    &+\nabla_{\mathbf{w}} \mathbf{I}(y^{(i)} = m) {\left [ \mathbf{w}^{T}_{m}\phi(\mathbf{x}^{(i)})- \log (1 + \sum_{j = 1}^{K -1} \exp(\mathbf{w}^T_{j}\phi(\mathbf{(x)}^{(i)}))\right]) } \Big) \\
+    &= \sum_{i=1}^{N} \Big(- \nabla_{\mathbf{w}} \sum_{k\neq m}^{K}  \mathbf{I}(y^{(i)} = k){\left [ \log (1 + \sum_{j = 1}^{K -1} \exp(\mathbf{w}^T_{j}\phi(\mathbf{(x)}^{(i)}))\right]) }\\ \notag
+    &+ \mathbf{I}(y^{(i)} = m) {\left [ \phi(\mathbf{x}^{(i)})- \nabla_{\mathbf{w}} \log (1 + \sum_{j = 1}^{K -1} \exp(\mathbf{w}^T_{j}\phi(\mathbf{(x)}^{(i)}))\right]) } \Big)\\ \notag
+    &= \sum_{i = 1}^{N} \Big( \mathbf{I}(y^{(i)} = m) \phi(\mathbf{x}^{(i)})- \nabla_{\mathbf{w}} \log (1 + \sum_{j = 1}^{K -1} \exp(\mathbf{w}^T_{j}\phi(\mathbf{(x)}^{(i)})))  \Big)\\ \notag
+    &= \sum_{i = 1}^{N} \phi(\mathbf{x}^{(i)}) \Big( \mathbf{I}(y^{(i)} = m) - \nabla_{\mathbf{w}} \frac{\exp(\mathbf{w}^T_{j}\phi(\mathbf{(x)}^{(i)}))} {(1 + \sum_{j = 1}^{K -1} \exp(\mathbf{w}^T_{j}\phi(\mathbf{(x)}^{(i)})))}  \Big)\\ \notag
+    & = \sum_{i = 1}^{N} \phi(\mathbf{x}^{(i)}) \Big(\mathbf{I}(y^{(i)} = m) - p(y^{(i)} = m|\mathbf{x}^{(i)}, \mathbf{w}) \Big)
+    \label{eq10}
+    \end{align}
+    \textbf{Part b:}\\
+    
+    \begin{figure}[H]  
+    \centering  
+    \includegraphics[width=4in,height=3.2in]{overfitting.png} 
+    \caption{The trend of $E_{RMS}$ changing with regulization factor $\lambda$ using closed form solution} 
+    \label{Fig4}
+    \end{figure}
+    
+
+
+    
+
+
+    
+
+    
+\end{homeworkProblem}
+
+\pagebreak
+
+\begin{homeworkProblem}
+    \large Gaussian Discriminate Analysis\\
+
+    \textbf{Solution}
+
+    \textbf{Part a:}\\
+    \begin{equation}
+    \begin{aligned}
+    &p(y = 1|\mathbf{x}^{(i)}) = \frac{p(\mathbf{x}^{(i)}|y = 1)p(y = 1)}{p(\mathbf{x}^{(i)})}\\
+    &= \frac{p(\mathbf{x}^{(i)}|y = 1)p(y = 1)}{p(\mathbf{x}^{(i)}|y = 1)p(y = 1) + p(\mathbf{x}^{(i)}|y = 0)p(y = 0)}\\
+    &= \frac{\frac{1}{(2\pi)^{\frac{M}{2}}|\Sigma|^{\frac{1}{2}}} \exp(-\frac{1}{2}(\mathbf{x}^{(i)} - \mu_1)^T\Sigma^{-1}(\mathbf{x}^{(i)} - \mu_1))\phi}{\frac{1}{(2\pi)^{\frac{M}{2}}|\Sigma|^{\frac{1}{2}}} \exp(-\frac{1}{2}(\mathbf{x}^{(i)} - \mu_1)^T\Sigma^{-1}(\mathbf{x}^{(i)} - \mu_1))\phi + \frac{1}{(2\pi)^{\frac{M}{2}}|\Sigma|^{\frac{1}{2}}} \exp(-\frac{1}{2}(\mathbf{x}^{(i)} - \mu_0)^T\Sigma^{-1}(\mathbf{x}^{(i)} - \mu_0))(1 - \phi)}\\
+    & = \frac{\exp(-\frac{1}{2}(\mathbf{x}^{(i)} - \mu_1)^T\Sigma^{-1}(\mathbf{x}^{(i)} - \mu_1))\phi}{ \exp(-\frac{1}{2}(\mathbf{x}^{(i)} - \mu_1)^T\Sigma^{-1}(\mathbf{x}^{(i)} - \mu_1))\phi +  \exp(-\frac{1}{2}(\mathbf{x}^{(i)} - \mu_0)^T\Sigma^{-1}(\mathbf{x}^{(i)} - \mu_0))(1 - \phi)}\\
+    & = \frac{1}{1 + \frac{\exp(-\frac{1}{2}(\mathbf{x}^{(i)} - \mu_1)^T\Sigma^{-1}(\mathbf{x}^{(i)} - \mu_1))\phi}{\exp(-\frac{1}{2}(\mathbf{x}^{(i)} - \mu_0)^T\Sigma^{-1}(\mathbf{x}^{(i)} - \mu_0))(1 - \phi)}}
+    \label{eq19}
+    \end{aligned}
+    \end{equation}
+    Then, we can assum that:
+    \begin{equation}
+    \begin{aligned}
+    \log \frac{p(y = 1| \mathbf{x}^{(i)})}{p(y = 0| \mathbf{x}^{(i)})} &= \log \frac{\exp(-\frac{1}{2}(\mathbf{x}^{(i)} - \mu_1)^T\Sigma^{-1}(\mathbf{x}^{(i)} - \mu_1))}{\exp(-\frac{1}{2}(\mathbf{x}^{(i)} - \mu_0)^T\Sigma^{-1}(\mathbf{x}^{(i)} - \mu_0))} + \log \frac{p(y = 1)}{p(y = 0)}\\
+    & = (-\frac{1}{2}(\mathbf{x}^{(i)} - \mu_1)^T\Sigma^{-1}(\mathbf{x}^{(i)} - \mu_1)) - (-\frac{1}{2}(\mathbf{x}^{(i)} - \mu_0)^T\Sigma^{-1}(\mathbf{x}^{(i)} - \mu_0)) + \log \frac{p(y = 1)}{p(y = 0)}\\
+    & = (\mu_1 - \mu_0)^T\Sigma^{-1}\mathbf{x}^{(i)} - \frac{1}{2}\mu_1^T\Sigma^{-1}\mu_1 + \frac{1}{2}\mu_0^T\Sigma^{-1}\mu_0 + \log \frac{\phi}{1 - \phi}
+    \label{eq20}
+    \end{aligned}
+    \end{equation}
+    where $(\mu_1 - \mu_0)^T\Sigma^{-1}\mathbf{x}^{(i)}$ is $W_T$ and $- \frac{1}{2}\mu_1^T\Sigma^{-1}\mu_1 + \frac{1}{2}\mu_0^T\Sigma^{-1}\mu_0 + \log \frac{\phi}{1 - \phi}$ is $W_0$. Thus, with (\ref{eq19}) and (\ref{eq20}) we will get:
+    \begin{equation}
+    \begin{aligned}
+    p(y = 1|\mathbf{x}^{(i)}) &= \frac{1}{1 + \exp({-\log \frac{p(y = 1| \mathbf{x}^{(i)})}{p(y = 0| \mathbf{x}^{(i)})}})}\\
+    & = \frac{1}{1 + \exp(-\mathbf{w}^T\mathbf{x}^{(i)})}
+    \label{eq21}
+    \end{aligned}
+    \end{equation}
+    so the posterior distribution of the label ($y$) at $\mathbf{x}$ takes the form of a logistic function, and can be written as:
+    \begin{equation}
+    \begin{aligned}
+    p(y = 1|\mathbf{x}; \phi, \Sigma, \mu_0. \mu_1) = \frac{1}{1 + \exp(- \mathbf{w}^T\mathbf{x})}
+    \label{eq22}
+    \end{aligned}
+    \end{equation}
+    \pagebreak
+
+    \textbf{Part b:}\\
+    Considering that b is a special case of c, we will directly consider $M$ both b and c here.
+    The log-likelihood of the data is:
+    \begin{equation}
+    \begin{aligned}
+    l(\phi, \mathbf{\mu}, \Sigma) &= \log (\Pi_{i = 1}^{N} p (\mathbf{x}^{(i)}, y^{(i)}; \phi, \mathbf{\mu}, \Sigma))\\
+    & = \log (\Pi_{i = 1}^{N} p (\mathbf{x}^{(i)}| y^{(i)}; \phi, \mathbf{\mu}, \Sigma)p(y^{(i)};\phi))\\
+    & = \log (\Pi_{i = 1}^{N} p (\mathbf{x}^{(i)}| y^{(i)}; \phi, \mathbf{\mu}, \Sigma)) + \log \Pi_{i = 1}^{N} p(y^{(i)};\phi)\\
+    & = \sum_{i=1}^{N}(\log (\frac{1}{(2\pi)^{\frac{M}{2}}|\Sigma|^{\frac{1}{2}}}) -\frac{1}{2}(\mathbf{x}^{(i)} - \mu_{y^{(i)}})^T\Sigma^{-1}(\mathbf{x}^{(i)} - \mu_{y^{(i)}})\\
+    & + y^{(i)}\log\phi + (1 - y^{(i)})\log (1 - \phi)
+    )
+    \label{eq23}
+    \end{aligned}
+    \end{equation}
+    Then take the partial derivative of $\phi$ to function $l$: 
+
+
+    \begin{equation}
+    \begin{aligned}
+    \frac{\partial l}{\partial \phi} &= \sum_{i = 1}^{N} [\frac{y^{(i)}}{\phi} - \frac{1 - y^{(i)}}{1 - \phi}]\\
+    & = \frac{\sum_{i = 1}^{N}y^{(i)}}{\phi} - \frac{N - \sum_{i = 1}^{N} y^{(i)}}{1 - \phi},
+    \label{eq24}
+    \end{aligned}
+    \end{equation}
+    let the partial derivative equal to zero:
+    \begin{equation}
+    \begin{aligned}
+    &\frac{\sum_{i = 1}^{N}y^{(i)}}{\phi} - \frac{N - \sum_{i = 1}^{N} y^{(i)}}{1 - \phi} = 0 \\
+    &\Rightarrow \frac{\sum_{i = 1}^{N}y^{(i)}}{\phi} = \frac{N - \sum_{i = 1}^{N} y^{(i)}}{1 - \phi}\\
+    &\Rightarrow \phi = \frac{1}{N}\sum_{i = 1}^{N}1\left\{y^{(i)} = 1 \right\}
+    \label{eq25}
+    \end{aligned}
+    \end{equation}
+    Then take the partial derivative of $\mu_0$ to function $l$:
+
+    \begin{equation}
+    \begin{aligned}
+    \nabla_{\mu_0}l &= \nabla_{\mu_0} [\sum_{i: y^{(i)} = 0} -\frac{1}{2}(\mathbf{x}^{(i)} - \mu_{0})^T\Sigma^{-1}(\mathbf{x}^{(i)} - \mu_{0})]\\
+    &= \sum_{i:y^{(i)} = 0} [\Sigma^{-1}\mathbf{x}^{(i)} - \Sigma^{-1} \mu_0],
+    \label{eq26}
+    \end{aligned}
+    \end{equation}
+    let the partial derivative equal to zero:
+    \begin{equation}
+    \begin{aligned}
+    \mu_0 = \frac{\sum_{i = 1}^{n}1\left\{y^{(i)} = 0\right\}\mathbf{x}^{(i)}}{\sum_{i=1}^{N}1\left\{ y^{(i)} = 0\right\}}.
+    \label{eq27}
+    \end{aligned}
+    \end{equation}
+    Similarly, $\mu_1$ can be written as:
+    \begin{equation}
+    \begin{aligned}
+    \mu_1 = \frac{\sum_{i = 1}^{n}1\left\{y^{(i)} = 1\right\}\mathbf{x}^{(i)}}{\sum_{i=1}^{N}1\left\{ y^{(i)} = 1\right\}}.
+    \label{eq27}
+    \end{aligned}
+    \end{equation}
+
+    Then take the partial derivative of $\Sigma$ to the function $l$, and for this situation, we only consider $M$ equals to 1:
+    \begin{equation}
+    \begin{aligned}
+    \nabla_{\Sigma}l &= \nabla_{\Sigma} [\sum_{i=1}^{N} \log (\frac{1}{(2\pi)^{\frac{M}{2}}|\Sigma|^{\frac{1}{2}}}) -\frac{1}{2}(\mathbf{x}^{(i)} - \mu_{0})^T\Sigma^{-1}(\mathbf{x}^{(i)} - \mu_{0})]\\
+    & = \nabla_{\Sigma} [\sum_{i=1}^{N} \log (\frac{1}{(2\pi)^{\frac{M}{2}}}) - {\frac{1}{2}}\log|\Sigma| -\frac{1}{2}(\mathbf{x}^{(i)} - \mu_{0})^T\Sigma^{-1}(\mathbf{x}^{(i)} - \mu_{0})]\\
+    & = \sum_{i=1}^{N} [ - {\frac{1}{2\Sigma}} + \frac{1}{2}(\mathbf{x}^{(i)} - \mu_{0})(\mathbf{x}^{(i)} - \mu_{0})^T \frac{1}{\Sigma^2}],
+    \label{eq27}
+    \end{aligned}
+    \end{equation}
+    let the partial derivative equal to zero:
+    \begin{equation}
+    \begin{aligned}
+    &\sum_{i=1}^{N} [ - {\frac{1}{2\Sigma}} + \frac{1}{2}(\mathbf{x}^{(i)} - \mu_{0})(\mathbf{x}^{(i)} - \mu_{0})^T \frac{1}{\Sigma^2}] = 0\\
+    &\Rightarrow \sum_{i=1}^{N} [\frac{1}{2}(\mathbf{x}^{(i)} - \mu_{0})(\mathbf{x}^{(i)} - \mu_{0})^T \frac{1}{\Sigma^2}] = \sum_{i=1}^{N} {\frac{1}{2\Sigma}} = \frac{N}{2\Sigma}\\
+    &\Rightarrow \Sigma = \frac{1}{N} \sum_{i=1}^{N}(\mathbf{x}^{(i)} - \mu_{0})(\mathbf{x}^{(i)} - \mu_{0})^T.
+    \label{eq28}
+    \end{aligned}
+    \end{equation}
+
+    \textbf{Part c:}\\
+    For $\phi$, it is the same as b. For $\mu$, it is also similar in b,
+    \begin{equation}
+    \begin{aligned}
+    \mu_{t} = \frac{\sum_{i = 1}^{n}1\left\{y^{(i)} = t\right\}\mathbf{x}^{(i)}}{\sum_{i=1}^{N}1\left\{ y^{(i)} = t\right\}}.
+    \label{eq29}
+    \end{aligned}
+    \end{equation}
+    
+
+
+
+
+\end{homeworkProblem}
+
+\pagebreak
+\begin{homeworkProblem}
+    \large Naive Bayes for classifying SPAM\\
+
+    \textbf{Solution}
+
+    \textbf{Part a:}\\
+
+\end{homeworkProblem}
+\end{document}
